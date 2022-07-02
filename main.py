@@ -1,16 +1,35 @@
-# This is a sample Python script.
+import sqlite3
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+db = sqlite3.connect('books.db')  # создает базу данных
+sql = db.cursor()  # переменная для взаимодействия с базой
+
+sql.execute("""CREATE TABLE IF NOT EXISTS books (
+    id INTEGER,
+    name TEXT,
+    extension TEXT,
+    year INTEGER,
+    tags TEXT,
+    transliterated_tags TEXT,
+    user_tags TEXT,
+    import_year INTEGER,
+    import_month INTEGER,
+    import_day INTEGER,
+    import_hour INTEGER,
+    import_minute INTEGER,
+    last_open_year INTEGER,
+    last_open_month INTEGER,
+    last_open_day INTEGER,
+    score INTEGER
+)""")  # создает таблицу
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# добавление данных
+sql.execute("INSERT INTO books VALUES (2, 'doesnt matter', 'pdf', '2018', 'qqq nvc pls wow', 'ыьер тщту зды цщц', 'number two book', 2022, 6, 11, 13, 59, 2022, 7, 18, 3)")
+
+# вывод данных
+sql.execute("SELECT rowid, * FROM books")
+print(sql.fetchall()) # вывести всё полученное от предыдущей команды
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+db.commit()  # сохраняет изменения
+db.close()
