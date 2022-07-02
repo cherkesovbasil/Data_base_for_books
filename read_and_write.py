@@ -72,7 +72,7 @@ for book_name in books_read[0][1]:
                     tr = en_ru(tag)
 
 
-            elif '(' in tag or ')' in tag:
+            elif '(' in tag or ')' in tag :
                 clear_tag = re.sub('[(|)]', '', tag)
                 while '(' in clear_tag and ')' in clear_tag:
                     clear_tag = re.sub('[(|)]', '', tag)
