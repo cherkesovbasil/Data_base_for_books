@@ -3,11 +3,10 @@ import time
 import re
 from tkinter import filedialog
 from googletrans import Translator
-from transliterate import translit
 
 
 class Pre_processing:
-    """функция для считывания названия из выбранной директории и первичной обработки"""
+    """Функция для считывания названия из выбранной директории и первичной обработки"""
 
     def __init__(self):
         self.books_for_post_processing = {}
@@ -15,7 +14,7 @@ class Pre_processing:
         print(self.filepath)
 
     def books_processing(self):
-        """выгребает все нужные значения из файлов, создает все тэги"""
+        """Выгребает все нужные значения из файлов, создает все теги"""
 
         if self.filepath == '':
             return
@@ -28,8 +27,8 @@ class Pre_processing:
 
         for root, directory, name in os.walk(self.filepath):  # считывает все названия из выбранной папки
             books_read.append([root, name])
-        root = books_read[0][0]  # выписывает директорию считаных файлов
-
+        root = books_read[0][0]  # выписывает директорию считанных файлов
+        print(books_read)
         for book_name in books_read[0][1]:
 
             #  считывает размер файла и приводит его к виду "мегабайт.хх"
@@ -48,7 +47,7 @@ class Pre_processing:
             # забирает значение названия книги
             pseudo_tags = book_name
 
-            # предобработка с килянием ненудных символов и разбиванием слов пробелами
+            # предобработка с килянием ненужных символов и разбиванием слов пробелами
             pseudo_tags = pseudo_tags.replace('.', ' ')
             pseudo_tags = pseudo_tags.replace(',', ' ')
             pseudo_tags = pseudo_tags.replace('-', ' ')
@@ -58,7 +57,7 @@ class Pre_processing:
             split_tags_with_glued = pseudo_tags.split()
             tags = []
 
-            # разделяет склееные слова в стиле ПервыеСловаВторыеСлова на рус и en, и фильтрует одиночные символы +
+            # разделяет склеенные слова в стиле ПервыеСловаВторыеСлова на рус и en, и фильтрует одиночные символы +
             # слова полностью из верхнего регистра
             split_tags = []
             for words_for_splitting in split_tags_with_glued:
@@ -70,12 +69,12 @@ class Pre_processing:
                         after_splitting_words.append(re.sub(r'(?<=\w)(?=[A-Z])', '   ', words_for_splitting))
                         after_splitting_words.append(re.sub(r'(?<=\w)(?=[А-Я])', '   ', words_for_splitting))
                         for splits in after_splitting_words:
-                            for items in splits.split():
-                                if len(items) > 1 and items not in split_tags:
-                                    split_tags.append(items)
+                            for words in splits.split():
+                                if len(words) > 1 and words not in split_tags:
+                                    split_tags.append(words)
 
             def en_ru(tr_word='0'):
-                """функция перевода на русский и транслитерации"""
+                """Функция перевода на русский и транслитерации"""
 
                 translated_tag = ''
                 # перевод на русский через сервисы гугла
@@ -89,6 +88,29 @@ class Pre_processing:
                             translated_tag = trans.text.lower()
 
                 return translated_tag
+
+            #
+            # простая транслитерация
+            #
+
+            def transliterate(word):
+
+                # Словарь с заменами
+                slovar = {'ation': 'эйшн', 'tion': 'шн', 'sch': 'щ', 'als': 'альные', 'iuc': 'юк', 'ch': 'ч',
+                          'shh': 'ш', 'sh': 'ш', 'zh': 'ж', 'iu': 'ю', 'uc': 'ук', 'ii': 'ий', 'ie': 'ые', 'yo': 'ё',
+                          'ya': 'я', 'by': 'бай', 'ph': 'ф', 'a': 'а', 'b': 'б', 'v': 'в', 'g': 'г', 'd': 'д', 'e': 'е',
+                          'z': 'з', 'i': 'и', 'k': 'к', 'l': 'л', 'm': 'м', 'n': 'н', 'o': 'о', 'p': 'п', 'r': 'р',
+                          's': 'с', 't': 'т', 'u': 'у', 'f': 'ф', 'h': 'х', 'c': 'к', 'y': 'и', 'j': 'й', 'x': 'кз',
+                          'ґ': '', 'ї': '', 'є': '', 'Ґ': 'g', 'Ї': 'i', 'Є': 'e'}
+
+                # Циклически заменяем все буквы в строке
+                for key in slovar:
+                    word = word.replace(key, slovar[key])
+                return word
+
+            #
+            # сделать транслитерацию по другому принципу с более комплексными приколдэсами
+            #
 
             # генерация тегов на русском и английском
             translation = []
@@ -107,11 +129,9 @@ class Pre_processing:
                                 if len(tr) > 1 and tr != '0' and tr not in tag:
                                     translation.append(tr)
 
-                                # модуль транслитерации с заменой "W" и "Q"
+                                # пропускает через простой модуль транслитерации
                                 if len(tag) > 1:
-                                    transliterated = translit(tag, 'ru')
-                                    transliterated = transliterated.replace("w", "в")
-                                    transliterated = transliterated.replace("q", "кв")
+                                    transliterated = transliterate(tag)
                                     if transliterated not in translation and transliterated not in tag:
                                         transliteration.append(transliterated)
                                 break
