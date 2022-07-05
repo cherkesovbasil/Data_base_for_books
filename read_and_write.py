@@ -3,6 +3,7 @@ import time
 import re
 from tkinter import filedialog
 from googletrans import Translator
+global filepath
 
 
 class Pre_processing:
@@ -10,55 +11,54 @@ class Pre_processing:
 
     def __init__(self):
         self.books_for_post_processing = {}
-        self.filepath = filedialog.askdirectory()
-        print(self.filepath)
+        print(filepath)
 
     def books_processing(self):
         """Выгребает все нужные значения из файлов, создает все теги"""
 
-        if self.filepath == '':
-            return
-
+        global filepath
         translator = Translator()
         all_english_symbols = 'qwertyuiopasdfghjklzxcvbnm'
         books_read = []
         exceptions_for_translation = ['pdfdrive', 'drive']
         exceptions_for_splitting = ['PDFDrive']
 
-        for root, directory, name in os.walk(self.filepath):  # считывает все названия из выбранной папки
+        for root, directory, name in os.walk(filepath):  # считывает все названия из выбранной папки
             books_read.append([root, name])
         root = books_read[0][0]  # выписывает директорию считанных файлов
         print(books_read)
         for book_name in books_read[0][1]:
 
             #  считывает размер файла и приводит его к виду "мегабайт.хх"
-            read_sizes = os.path.getsize(self.filepath + '/' + book_name)
+            read_sizes = os.path.getsize(filepath + '/' + book_name)
             size = round(float(read_sizes / 1000000), 2)
 
-            modification_time = os.path.getmtime(self.filepath + '/' + book_name)
+            modification_time = os.path.getmtime(filepath + '/' + book_name)
             local_modification_time = time.ctime(modification_time)
 
-            creation_time = os.path.getctime(self.filepath + '/' + book_name)
+            creation_time = os.path.getctime(filepath + '/' + book_name)
             local_creation_time = time.ctime(creation_time)
 
-            last_open_time = os.path.getatime(self.filepath + '/' + book_name)
+            last_open_time = os.path.getatime(filepath + '/' + book_name)
             local_last_open_time = time.ctime(last_open_time)
 
             # забирает значение названия книги
             pseudo_tags = book_name
 
             # предобработка с килянием ненужных символов и разбиванием слов пробелами
-            pseudo_tags = pseudo_tags.replace('.', ' ')
-            pseudo_tags = pseudo_tags.replace(',', ' ')
-            pseudo_tags = pseudo_tags.replace('-', ' ')
-            pseudo_tags = pseudo_tags.replace('_', ' ')
-            pseudo_tags = pseudo_tags.replace('(', ' ')
-            pseudo_tags = pseudo_tags.replace(')', ' ')
+            elements_to_clear = [
+                                 (',', ' '), ('-', ' '), ('_', ' '), ('(', ' '), (')', ' '), ('[', ' '), (']', ' '),
+                                 ("'", ''), ("~", ' '), ("$", ' '), (".", ' ')
+                                 ]
+
+            for initial_element, final_element in elements_to_clear:
+                pseudo_tags = pseudo_tags.replace(initial_element, final_element)
+
             split_tags_with_glued = pseudo_tags.split()
-            tags = []
 
             # разделяет склеенные слова в стиле ПервыеСловаВторыеСлова на рус и en, и фильтрует одиночные символы +
             # слова полностью из верхнего регистра
+            tags = []
             split_tags = []
             for words_for_splitting in split_tags_with_glued:
                 if words_for_splitting.lower() not in exceptions_for_splitting and len(words_for_splitting) > 1:
@@ -73,44 +73,50 @@ class Pre_processing:
                                 if len(words) > 1 and words not in split_tags:
                                     split_tags.append(words)
 
-            def en_ru(tr_word='0'):
+            def en_ru(tr_word):
                 """Функция перевода на русский и транслитерации"""
 
                 translated_tag = ''
                 # перевод на русский через сервисы гугла
                 word = tr_word.lower()
                 timer = 0
-                for symbol in word.lower():
+                for symbol in word:
                     if symbol in all_english_symbols:
                         timer += 1
                         if timer == len(word):
-                            trans = translator.translate(word, dest='ru')
-                            translated_tag = trans.text.lower()
+                            #trans = translator.translate(word, dest='ru')
+                            #translated_tag = trans.text
+                            pass
 
                 return translated_tag
 
             #
             # простая транслитерация
             #
+            # при проверке в оригинале слова убирать мягкие знаки, делать "ш" == "щ", "у" == "ю", "э" == "е",
+            # "ы" == "и", "е" == "и", "ц" == "к", "иан" == "аен" == "айен",  "а" == "э", "е" == "йэ" == "йо",
+            # "ю" == "йу", "я" == "йа", "в" == "уэ"
+            #
 
             def transliterate(word):
 
                 # Словарь с заменами
-                slovar = {'ation': 'эйшн', 'tion': 'шн', 'sch': 'щ', 'als': 'альные', 'iuc': 'юк', 'ch': 'ч',
-                          'shh': 'ш', 'sh': 'ш', 'zh': 'ж', 'iu': 'ю', 'uc': 'ук', 'ii': 'ий', 'ie': 'ые', 'yo': 'ё',
-                          'ya': 'я', 'by': 'бай', 'ph': 'ф', 'a': 'а', 'b': 'б', 'v': 'в', 'g': 'г', 'd': 'д', 'e': 'е',
-                          'z': 'з', 'i': 'и', 'k': 'к', 'l': 'л', 'm': 'м', 'n': 'н', 'o': 'о', 'p': 'п', 'r': 'р',
-                          's': 'с', 't': 'т', 'u': 'у', 'f': 'ф', 'h': 'х', 'c': 'к', 'y': 'и', 'j': 'й', 'x': 'кз',
-                          'ґ': '', 'ї': '', 'є': '', 'Ґ': 'g', 'Ї': 'i', 'Є': 'e'}
+                slovar = {
+                          'sch': 'щ', 'ch': 'ч', 'shh': 'ш', 'sh': 'ш', 'zh': 'ж', 'yo': 'е', 'jo': 'е', 'je': 'е',
+                          'yu': 'ю', 'ju': 'ю', 'ya': 'я', 'ja': 'я', 'ph': 'ф',
+
+                          'a': 'а', 'b': 'б', 'c': 'ц', 'd': 'д', 'e': 'е', 'f': 'ф', 'g': 'г', 'h': 'х', 'i': 'и',
+                          'j': 'й', 'k': 'к', 'l': 'л', 'm': 'м', 'n': 'н', 'o': 'о', 'p': 'п', 'q': 'к', 'r': 'р',
+                          's': 'с', 't': 'т', 'u': 'у', 'v': 'в', 'w': 'в', 'x': 'кз', 'y': 'ы', 'z': 'з',
+
+                          'ґ': 'г', 'ї': 'и', 'є': 'е', 'Є': 'е'
+                          }
 
                 # Циклически заменяем все буквы в строке
                 for key in slovar:
                     word = word.replace(key, slovar[key])
-                return word
 
-            #
-            # сделать транслитерацию по другому принципу с более комплексными приколдэсами
-            #
+                return word
 
             # генерация тегов на русском и английском
             translation = []
@@ -126,7 +132,7 @@ class Pre_processing:
                         for alpha in all_english_symbols:
                             if alpha in tag and tag not in exceptions_for_translation and tag != split_tags[-1]:
                                 tr = en_ru(tag)
-                                if len(tr) > 1 and tr != '0' and tr not in tag:
+                                if len(tr) > 1 and tr not in tag:
                                     translation.append(tr)
 
                                 # пропускает через простой модуль транслитерации
@@ -148,11 +154,82 @@ class Pre_processing:
         return self.books_for_post_processing
 
 
-init_books = Pre_processing()
-books = init_books.books_processing()
-print(books)
-if books:
-    for items in books.values():
-        print(items)
-else:
-    print('ОКНО ВЫБОРА ПАПКИ ДЛЯ СЧИТЫВАНИЯ В БАЗУ БЫЛО ЗАКРЫТО')
+def initialize_books_processing():
+
+    global filepath
+    filepath = []
+    init_books = Pre_processing()
+
+    filepath = filedialog.askdirectory()
+
+    # если путь был выбран
+    if filepath:
+        file_names = os.listdir(filepath)
+
+        # проверить наличие файлов и папок в выбранной директории
+        if file_names:
+            directory_trigger = False
+            file_trigger = False
+            for name in file_names:
+                if os.path.isdir(os.path.join(filepath, name)) and not directory_trigger:
+                    directory_trigger = True
+                if not os.path.isdir(os.path.join(filepath, name)) and not file_trigger:
+                    file_trigger = True
+
+            # в зависимости от результатов сработки триггеров, выбирается дальнейшее направление
+
+            #
+            # ПОЛЮБАС ПРОВЕРКУ НА ГЛУБИНУ НУЖНО ДЕЛАТЬ В ЭТОМ МОМЕНТЕ. ЛИБО ОТДЕЛЬНОЙ ФУНКЦИЕЙ. НО ШО ТО ХЕРНЯ,
+            # ШО ЭТО ХЕРНЯ. ЕСЛИ ДЕЛАТЬ ЭТО ГДЕ-ТО ДАЛЬШЕ, ПРЕРЫВАНИЕ ПО ОТСУТСТВИЮ ГЛУБИНЫ БУДЕТ БОЛЕЗНЕННЫМ
+            #
+
+            if directory_trigger and file_trigger:
+                # директории и файлы
+                depth = 0
+                max_dirpath_len = 0
+                folder_name = ''
+                for dirpath, dirnames, filenames in os.walk(filepath):
+                    if len(dirpath) > max_dirpath_len:
+                        # ДОРАБОТАТЬ, ЧТОБЫ БЫЛ СПИСОК ВСЕХ ПАПОК
+                        # СДЕЛАТЬ ПРОВЕРКУ, ЕСТЬ ЛИ В САМЫХ ГЛУБОКИХ ПАПКАХ ФАЙЛЫ
+                        # ЕСЛИ ФАЙЛОВ НЕТ, ДЕЛАТЬ ПРОВЕРКУ ПО БОЛЕЕ ВЫСОКИМ ПАПКАМ ПО ОЧЕРЕДИ
+                        # ЗАПХАТЬ ВСЁ В СЛОВАРЬ {0: ..., 1:.... }, ГДЕ ЦИФРЫ - ГЛУБИНА, А ПОТОМ СПИСКОМ ПУТИ К ФАЙЛАМ!!!
+                        depth = dirpath.count("\\")
+                        folder_name = filenames
+
+
+
+                # узнать глубину директории
+                # отправить в функцию циклической прогонки
+                pass
+
+            elif directory_trigger and not file_trigger:
+                # есть какие-то папки, но нет файлов
+
+                # узнать глубину директории -> если внутри директории также не будет файлов, return с сообщением
+                # изменить значение триггера для удаления первоначального пути
+                # отравить в функцию циклической прогонки
+                pass
+
+            elif file_trigger and not directory_trigger:
+                books = init_books.books_processing()
+                print(books)
+                if books:
+                    for items in books.values():
+                        print(items)
+                # отправить на обработку в пре-процессинг
+                pass
+
+            else:
+                # return с сообщением о том, что система не смогла распознать файлы и папки в выбранной директории
+                print('Система не смогла распознать файлы и папки в выбранной директории')
+                pass
+        else:
+            print('В выбранной директории нет файлов и папок')
+
+    else:
+        print('Окно было закрыто')
+        return
+
+# Старт работы функции выбора файла. По сути, старт работы приложения, не считая GUI
+initialize_books_processing()
