@@ -84,18 +84,17 @@ class Pre_processing:
                     if symbol in all_english_symbols:
                         timer += 1
                         if timer == len(word):
-                            #trans = translator.translate(word, dest='ru')
-                            #translated_tag = trans.text
-                            pass
+                            trans = translator.translate(word, dest='ru')
+                            translated_tag = trans.text
 
-                return translated_tag
+                return translated_tag.lower()
 
             #
             # простая транслитерация
             #
             # при проверке в оригинале слова убирать мягкие знаки, делать "ш" == "щ", "у" == "ю", "э" == "е",
             # "ы" == "и", "е" == "и", "ц" == "к", "иан" == "аен" == "айен",  "а" == "э", "е" == "йэ" == "йо",
-            # "ю" == "йу", "я" == "йа", "в" == "уэ"
+            # "ю" == "йу", "я" == "йа", "в" == "уэ", "и" == "ай""
             #
 
             def transliterate(word):
@@ -175,50 +174,25 @@ def initialize_books_processing():
                     directory_trigger = True
                 if not os.path.isdir(os.path.join(filepath, name)) and not file_trigger:
                     file_trigger = True
+                if directory_trigger and file_trigger:
+                    break
 
-            # в зависимости от результатов сработки триггеров, выбирается дальнейшее направление
+            # в зависимости от результатов сработки триггеров, выбирается дальнейшее направление событий
 
-            #
-            # ПОЛЮБАС ПРОВЕРКУ НА ГЛУБИНУ НУЖНО ДЕЛАТЬ В ЭТОМ МОМЕНТЕ. ЛИБО ОТДЕЛЬНОЙ ФУНКЦИЕЙ. НО ШО ТО ХЕРНЯ,
-            # ШО ЭТО ХЕРНЯ. ЕСЛИ ДЕЛАТЬ ЭТО ГДЕ-ТО ДАЛЬШЕ, ПРЕРЫВАНИЕ ПО ОТСУТСТВИЮ ГЛУБИНЫ БУДЕТ БОЛЕЗНЕННЫМ
-            #
-
-            if directory_trigger and file_trigger:
-                # директории и файлы
-                depth = 0
-                max_dirpath_len = 0
-                folder_name = ''
-                for dirpath, dirnames, filenames in os.walk(filepath):
-                    if len(dirpath) > max_dirpath_len:
-                        # ДОРАБОТАТЬ, ЧТОБЫ БЫЛ СПИСОК ВСЕХ ПАПОК
-                        # СДЕЛАТЬ ПРОВЕРКУ, ЕСТЬ ЛИ В САМЫХ ГЛУБОКИХ ПАПКАХ ФАЙЛЫ
-                        # ЕСЛИ ФАЙЛОВ НЕТ, ДЕЛАТЬ ПРОВЕРКУ ПО БОЛЕЕ ВЫСОКИМ ПАПКАМ ПО ОЧЕРЕДИ
-                        # ЗАПХАТЬ ВСЁ В СЛОВАРЬ {0: ..., 1:.... }, ГДЕ ЦИФРЫ - ГЛУБИНА, А ПОТОМ СПИСКОМ ПУТИ К ФАЙЛАМ!!!
-                        depth = dirpath.count("\\")
-                        folder_name = filenames
-
-
-
-                # узнать глубину директории
-                # отправить в функцию циклической прогонки
-                pass
-
-            elif directory_trigger and not file_trigger:
-                # есть какие-то папки, но нет файлов
-
-                # узнать глубину директории -> если внутри директории также не будет файлов, return с сообщением
-                # изменить значение триггера для удаления первоначального пути
-                # отравить в функцию циклической прогонки
-                pass
-
-            elif file_trigger and not directory_trigger:
+            # отправляет прямиком в модуль обработки
+            if file_trigger and not directory_trigger:
                 books = init_books.books_processing()
                 print(books)
                 if books:
                     for items in books.values():
                         print(items)
-                # отправить на обработку в пре-процессинг
-                pass
+            # НУЖНО НАПИСАТЬ ОТДЕЛЬНУЮ ФУНКЦИЮ ВНУТРИ ЭТОЙ ДЛЯ ЦИКЛИЧЕСКОЙ ПРОГОНКИ С СОБРАННЫМ СЛОВАРЁМ !!!!!!!!!
+            elif directory_trigger or file_trigger:
+                directories = {}
+                # узнает глубину директории и количество файлов внутри
+                for dirpath, dirnames, filenames in os.walk(filepath):
+                    depth = dirpath.count("\\")
+                    directories.setdefault(depth, []).append([dirpath, len(filenames)])
 
             else:
                 # return с сообщением о том, что система не смогла распознать файлы и папки в выбранной директории
