@@ -3,7 +3,6 @@ import time
 import re
 from tkinter import filedialog
 from googletrans import Translator
-global filepath
 
 
 class Pre_processing:
@@ -11,22 +10,19 @@ class Pre_processing:
 
     def __init__(self):
         self.books_for_post_processing = {}
-        print(filepath)
 
-    def books_processing(self):
+    def books_processing(self, translation_trigger=False, transliteration_trigger=False, filepath=False):
         """Выгребает все нужные значения из файлов, создает все теги"""
 
-        global filepath
         translator = Translator()
         all_english_symbols = 'qwertyuiopasdfghjklzxcvbnm'
         books_read = []
-        exceptions_for_translation = ['pdfdrive', 'drive']
+        exceptions_for_translation = ['pdfdrive', 'drive', 'doc']
         exceptions_for_splitting = ['PDFDrive']
 
         for root, directory, name in os.walk(filepath):  # считывает все названия из выбранной папки
             books_read.append([root, name])
         root = books_read[0][0]  # выписывает директорию считанных файлов
-        print(books_read)
         for book_name in books_read[0][1]:
 
             #  считывает размер файла и приводит его к виду "мегабайт.хх"
@@ -127,19 +123,20 @@ class Pre_processing:
                     tags.append(tag)
 
                     # перевод на английский с проверкой на английские буквы
-                    if tag.isalpha():
+                    if translation_trigger and tag.isalpha():
                         for alpha in all_english_symbols:
                             if alpha in tag and tag not in exceptions_for_translation and tag != split_tags[-1]:
                                 tr = en_ru(tag)
                                 if len(tr) > 1 and tr not in tag:
                                     translation.append(tr)
+                                    break
 
-                                # пропускает через простой модуль транслитерации
-                                if len(tag) > 1:
-                                    transliterated = transliterate(tag)
-                                    if transliterated not in translation and transliterated not in tag:
-                                        transliteration.append(transliterated)
-                                break
+                    # пропускает через простой модуль транслитерации
+                    if transliteration_trigger and tag.isalpha() and tag != split_tags[-1] \
+                            and tag not in exceptions_for_translation:
+                        transliterated = transliterate(tag)
+                        if transliterated not in translation and transliterated not in tag:
+                            transliteration.append(transliterated)
 
             book_format = tags[-1]
 
@@ -150,14 +147,18 @@ class Pre_processing:
                                                                                  local_last_open_time, tags,
                                                                                  translation,
                                                                                  transliteration]
+
         return self.books_for_post_processing
 
 
 def initialize_books_processing():
+    """
+    Первично проверяет наличие файлов и глубину их залегания.
+    Возвращает словарь:
 
-    global filepath
-    filepath = []
-    init_books = Pre_processing()
+        {глубина_1: [[директория: количество файлов], [директория: количество файлов]], глубина_2: [[...]], ...}
+
+    """
 
     filepath = filedialog.askdirectory()
 
@@ -167,43 +168,47 @@ def initialize_books_processing():
 
         # проверить наличие файлов и папок в выбранной директории
         if file_names:
-            directory_trigger = False
             file_trigger = False
             for name in file_names:
-                if os.path.isdir(os.path.join(filepath, name)) and not directory_trigger:
-                    directory_trigger = True
                 if not os.path.isdir(os.path.join(filepath, name)) and not file_trigger:
                     file_trigger = True
-                if directory_trigger and file_trigger:
                     break
 
-            # в зависимости от результатов сработки триггеров, выбирается дальнейшее направление событий
-
-            # отправляет прямиком в модуль обработки
-            if file_trigger and not directory_trigger:
-                books = init_books.books_processing()
-                print(books)
-                if books:
-                    for items in books.values():
-                        print(items)
-            # НУЖНО НАПИСАТЬ ОТДЕЛЬНУЮ ФУНКЦИЮ ВНУТРИ ЭТОЙ ДЛЯ ЦИКЛИЧЕСКОЙ ПРОГОНКИ С СОБРАННЫМ СЛОВАРЁМ !!!!!!!!!
-            elif directory_trigger or file_trigger:
+            # если триггер сработа, передаёт пути в ГУИ для возможности выбора и предпросмотра
+            if file_trigger:
                 directories = {}
                 # узнает глубину директории и количество файлов внутри
                 for dirpath, dirnames, filenames in os.walk(filepath):
                     depth = dirpath.count("\\")
                     directories.setdefault(depth, []).append([dirpath, len(filenames)])
+                return directories
+
 
             else:
-                # return с сообщением о том, что система не смогла распознать файлы и папки в выбранной директории
-                print('Система не смогла распознать файлы и папки в выбранной директории')
-                pass
+                print('Система не смогла распознать файлы в выбранной директории')
+                return
+
         else:
-            print('В выбранной директории нет файлов и папок')
+            print('В выбранной директории нет файлов')
+            return
 
     else:
         print('Окно было закрыто')
         return
 
-# Старт работы функции выбора файла. По сути, старт работы приложения, не считая GUI
-initialize_books_processing()
+
+def circular_processing():
+    """Функция циклической прогонки директорий через препроцессинг"""
+
+    # Старт работы функции выбора файла. По сути, старт работы приложения, не считая GUI
+    init_books = Pre_processing()
+    direct = initialize_books_processing()
+    print(direct)
+    for depth in range(len(direct)):
+        for elements in direct[depth]:
+            books = init_books.books_processing(True, True, elements[0])
+            print(books)
+
+
+
+circular_processing()
