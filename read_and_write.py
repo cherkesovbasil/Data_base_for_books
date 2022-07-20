@@ -20,22 +20,22 @@ class Pre_processing:
         exceptions_for_translation = ['pdfdrive', 'drive', 'doc']
         exceptions_for_splitting = ['PDFDrive']
 
-        for root, directory, name in os.walk(filepath):  # считывает все названия из выбранной папки
+        for root, directory, name in os.walk(str(filepath)):  # считывает все названия из выбранной папки
             books_read.append([root, name])
         root = books_read[0][0]  # выписывает директорию считанных файлов
         for book_name in books_read[0][1]:
 
             #  считывает размер файла и приводит его к виду "мегабайт.хх"
-            read_sizes = os.path.getsize(filepath + '/' + book_name)
+            read_sizes = os.path.getsize(str(filepath) + '/' + str(book_name))
             size = round(float(read_sizes / 1000000), 2)
 
-            modification_time = os.path.getmtime(filepath + '/' + book_name)
+            modification_time = os.path.getmtime(str(filepath) + '/' + str(book_name))
             local_modification_time = time.ctime(modification_time)
 
-            creation_time = os.path.getctime(filepath + '/' + book_name)
+            creation_time = os.path.getctime(str(filepath) + '/' + str(book_name))
             local_creation_time = time.ctime(creation_time)
 
-            last_open_time = os.path.getatime(filepath + '/' + book_name)
+            last_open_time = os.path.getatime(str(filepath) + '/' + str(book_name))
             local_last_open_time = time.ctime(last_open_time)
 
             # забирает значение названия книги
@@ -166,15 +166,15 @@ def initialize_books_processing():
     if filepath:
         file_names = os.listdir(filepath)
 
-        # проверить наличие файлов и папок в выбранной директории
+        # проверить наличие файлов в выбранной директории
         if file_names:
             file_trigger = False
             for name in file_names:
-                if not os.path.isdir(os.path.join(filepath, name)) and not file_trigger:
+                if not os.path.isdir(os.path.join(filepath, name)):
                     file_trigger = True
                     break
 
-            # если триггер сработа, передаёт пути в ГУИ для возможности выбора и предпросмотра
+            # если триггер сработал, передаёт пути в ГУИ для возможности выбора и предпросмотра
             if file_trigger:
                 directories = {}
                 # узнает глубину директории и количество файлов внутри
@@ -183,32 +183,45 @@ def initialize_books_processing():
                     directories.setdefault(depth, []).append([dirpath, len(filenames)])
                 return directories
 
-
             else:
-                print('Система не смогла распознать файлы в выбранной директории')
-                return
-
+                return "No files read"
         else:
-            print('В выбранной директории нет файлов')
-            return
-
+            return "Can't read files"
     else:
-        print('Окно было закрыто')
-        return
+        return "Window were closed"
 
 
 def circular_processing():
     """Функция циклической прогонки директорий через препроцессинг"""
 
-    # Старт работы функции выбора файла. По сути, старт работы приложения, не считая GUI
+    #
+    # Данный кусок кода должен быть не тут, а в ГУИ. Однако запускать отсюда удобнее. Так что... Перенести потом в ГУИ
+    #
     init_books = Pre_processing()
     direct = initialize_books_processing()
-    print(direct)
-    for depth in range(len(direct)):
-        for elements in direct[depth]:
-            books = init_books.books_processing(True, True, elements[0])
-            print(books)
 
+    if direct == "Window were closed":
+        print('Окно было закрыто')
+        return
+    if direct == "Can't read files":
+        print('В выбранной директории нет файлов')
+        return
+    if direct == "No files read":
+        print('Система смогла распознать только папки в выбранной директории')
+        return
+    #
+    #
+    #
+
+    print(direct)
+
+    for depth in direct.values():
+        for elements in depth:
+            print('второй вариант')
+            print(elements)
+            books = init_books.books_processing(translation_trigger=False, transliteration_trigger=True,
+                                                filepath=elements[0])
+            print(books)
 
 
 circular_processing()
