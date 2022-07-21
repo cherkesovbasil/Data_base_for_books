@@ -217,7 +217,7 @@ def circular_processing():
 
     for depth in direct.values():
         for elements in depth:
-            print('второй вариант')
+            print('элементы')
             print(elements)
             books = init_books.books_processing(translation_trigger=False, transliteration_trigger=True,
                                                 filepath=elements[0])
