@@ -13,36 +13,62 @@ class Gui:
     """Графический интерфейс"""
 
     def __init__(self):
-        pass
+        self.box = None
+
+    def open_db(self):
+        #
+        # Временная замена отображения списка баз данных
+        #
+
+        something = ["uno", 'duo', 'пятое', 'десятое', 'всякая непонятная херобора',
+                     'оооооооооооооооооооооочень мноооооооооооого тееееееееееееееееееееееееееекста !!!!!!!!!!!!!!',
+                     "ПРОСТО СТРАННАЯ ШТУКА КАПСОМ", 'gjxtve ,s b y]lf', 'почему бы и да', "тут есть нешта живое?",
+                     '2', '3', '4', '5']
+        for smth in something:
+            self.box.insert(END, smth)
+        print('AAAAAAAAAAAAAAAAAAAAAAA')
+
+    def new_db_generation(self):
+        generation_window = Tk()
+        generation_window.title("Базы данных")
+        large_font = font.Font(weight='bold', size=12)
+
+        # disables the ability to zoom the page
+        generation_window.resizable(False, False)
+
+        # frame for the main interface
+        frame_for_buttons_start_window = LabelFrame(generation_window)
+        frame_for_buttons_start_window.pack(side=TOP)
+
+        # outputs the information about the absolute error in the GUI
+        open_btn = Button(frame_for_buttons_start_window, text="Открыть БД", relief=GROOVE, width=30)
+        open_btn.pack(side=LEFT)
+        new_db_btn = Button(frame_for_buttons_start_window, text="Создать новую БД", relief=GROOVE, width=30)
+        new_db_btn.pack(side=LEFT)
+        delete_db_btn = Button(frame_for_buttons_start_window, text="Удалить БД", relief=GROOVE, width=30, cursor='X_cursor')
+        delete_db_btn.pack(side=LEFT)
+
+        # sets the size of the window and places it in the center of the screen
+        generation_window.update_idletasks()  # Updates information after all frames are created
+        s = generation_window.geometry()
+        s = s.split('+')
+        s = s[0].split('x')
+        width_main_window = int(s[0])
+        height_main_window = int(s[1])
+
+        w = generation_window.winfo_screenwidth()
+        h = generation_window.winfo_screenheight()
+        h = h // 2
+        w = w - width_main_window - 12
+        h = h - height_main_window // 2
+        generation_window.geometry('+{}+{}'.format(w, h))
+        print('BBBBBBBBBBBBBBBBBBBBBBB')
+
+    def delete_db(self):
+        print('DDDDDDDDDDDDDDDDDDDDDDD')
 
     def init_start_window(self):
         """Запускает первичное окно с возможностью первичного просмотра баз данных, добавления, удаления, открытия"""
-
-        def generate_db():
-
-            #
-            # Временная замена отображения списка баз данных
-            #
-
-            something = ["uno", 'duo', 'пятое', 'десятое', 'всякая непонятная херобора',
-                         'оооооооооооооооооооооочень мноооооооооооого тееееееееееееееееееееееееееекста !!!!!!!!!!!!!!',
-                         "ПРОСТО СТРАННАЯ ШТУКА КАПСОМ", 'gjxtve ,s b y]lf', 'почему бы и да', "тут есть нешта живое?",
-                         '2', '3', '4', '5']
-            for smth in something:
-                box.insert(END, smth)
-            print('AAAAAAAAAAAAAAAAAAAAAAA')
-
-        def new_db_generation():
-            print('BBBBBBBBBBBBBBBBBBBBBBB')
-
-        def delete_db():
-            print('DDDDDDDDDDDDDDDDDDDDDDD')
-
-
-        #
-        # ВЫНЕСТИ ВЫШЕСТОЯЩИЕ ФУНКЦИИ В РАЗДЕЛ КЛАССА, ДАБЫ ОСНОВНОЕ ОКНО НЕ БЫЛО СТРОГО НА НИХ ЗАВЯЗАНО. ИНАЧЕ ПОТОМ
-        # БУДУТ ПРОБЛЕММЫ С ПЕРЕЗАПУСКОМ И ПР.
-        #
 
         start_window = Tk()
         start_window.title("Базы данных")
@@ -57,18 +83,18 @@ class Gui:
         frame_for_buttons_start_window = LabelFrame(start_window)
         frame_for_buttons_start_window.pack(side=TOP)
 
-        box = Listbox(frame_for_list_of_dbs, width=71, selectbackground='grey70', font=large_font)
-        box.pack(side=LEFT)
-        scroll = Scrollbar(frame_for_list_of_dbs, command=box.yview)
+        self.box = Listbox(frame_for_list_of_dbs, width=71, selectbackground='grey70', font=large_font)
+        self.box.pack(side=LEFT)
+        scroll = Scrollbar(frame_for_list_of_dbs, command=self.box.yview)
         scroll.pack(side=LEFT, fill=Y)
-        box.config(yscrollcommand=scroll.set)
+        self.box.config(yscrollcommand=scroll.set)
 
         # outputs the information about the absolute error in the GUI
-        open_btn = Button(frame_for_buttons_start_window, text="Открыть БД", relief=GROOVE, width=30, command=generate_db)
+        open_btn = Button(frame_for_buttons_start_window, text="Открыть БД", relief=GROOVE, width=30, command=self.open_db)
         open_btn.pack(side=LEFT)
-        new_db_btn = Button(frame_for_buttons_start_window, text="Создать новую БД", relief=GROOVE, width=30, command=new_db_generation)
+        new_db_btn = Button(frame_for_buttons_start_window, text="Создать новую БД", relief=GROOVE, width=30, command=self.new_db_generation)
         new_db_btn.pack(side=LEFT)
-        delete_db_btn = Button(frame_for_buttons_start_window, text="Удалить БД", relief=GROOVE, width=30, cursor='X_cursor', command=delete_db)
+        delete_db_btn = Button(frame_for_buttons_start_window, text="Удалить БД", relief=GROOVE, width=30, cursor='X_cursor', command=self.delete_db)
         delete_db_btn.pack(side=LEFT)
 
         # sets the size of the window and places it in the center of the screen
@@ -88,10 +114,6 @@ class Gui:
         start_window.geometry('+{}+{}'.format(w, h))
 
         start_window.mainloop()
-
-#
-# НИЖЕ ВСЁ ОК. ВВЕРХУ ПИЗДЕЦ (ГУИ В РАЗРАБОТКЕ)
-#
 
 
 init_check = Gui()
