@@ -28,6 +28,7 @@ class Gui:
             self.box.insert(END, smth)
         print('AAAAAAAAAAAAAAAAAAAAAAA')
 
+
     def new_db_generation(self):
         generation_window = Tk()
         generation_window.title("Базы данных")
