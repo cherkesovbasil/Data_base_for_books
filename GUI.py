@@ -13,6 +13,10 @@ class Gui:
     """Графический интерфейс"""
 
     def __init__(self):
+        self.delete_db_btn = None
+        self.open_btn = None
+        self.asc_generation_window = None
+        self.new_db_btn = None
         self.box = None
 
     def open_db(self):
@@ -28,42 +32,54 @@ class Gui:
             self.box.insert(END, smth)
         print('AAAAAAAAAAAAAAAAAAAAAAA')
 
+    # при открытии окна отрубает все кнопки в главном меню
+    def on_open(self):
+        self.open_btn['state'] = DISABLED
+        self.new_db_btn['state'] = DISABLED
+        self.delete_db_btn['state'] = DISABLED
 
-    def new_db_generation(self):
-        generation_window = Tk()
-        generation_window.title("Базы данных")
-        large_font = font.Font(weight='bold', size=12)
+    # возвращает кнопки в активное состояние после закрытия второстепенного окна
+    def on_closing(self):
+        self.asc_generation_window.destroy()
+        self.open_btn['state'] = NORMAL
+        self.new_db_btn['state'] = NORMAL
+        self.delete_db_btn['state'] = NORMAL
+
+    # запускает стартовое окно с запросом на генерацию баз данных
+    def ask_db_generation(self):
+        self.on_open()
+        self.asc_generation_window = Tk()
+        self.asc_generation_window.title("Режим")
+        self.asc_generation_window.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         # disables the ability to zoom the page
-        generation_window.resizable(False, False)
+        self.asc_generation_window.resizable(False, False)
 
         # frame for the main interface
-        frame_for_buttons_start_window = LabelFrame(generation_window)
+        frame_for_buttons_start_window = LabelFrame(self.asc_generation_window)
         frame_for_buttons_start_window.pack(side=TOP)
 
         # outputs the information about the absolute error in the GUI
-        open_btn = Button(frame_for_buttons_start_window, text="Открыть БД", relief=GROOVE, width=30)
-        open_btn.pack(side=LEFT)
-        new_db_btn = Button(frame_for_buttons_start_window, text="Создать новую БД", relief=GROOVE, width=30)
-        new_db_btn.pack(side=LEFT)
-        delete_db_btn = Button(frame_for_buttons_start_window, text="Удалить БД", relief=GROOVE, width=30, cursor='X_cursor')
-        delete_db_btn.pack(side=LEFT)
+        open_btn = Button(frame_for_buttons_start_window, text="Создать новую", relief=GROOVE, width=30)
+        open_btn.pack(side=TOP)
+        new_db_btn = Button(frame_for_buttons_start_window, text="Разархивировать", relief=GROOVE, width=30, state=DISABLED)
+        new_db_btn.pack(side=TOP)
 
         # sets the size of the window and places it in the center of the screen
-        generation_window.update_idletasks()  # Updates information after all frames are created
-        s = generation_window.geometry()
+        self.asc_generation_window.update_idletasks()  # Updates information after all frames are created
+        s = self.asc_generation_window.geometry()
         s = s.split('+')
         s = s[0].split('x')
         width_main_window = int(s[0])
         height_main_window = int(s[1])
 
-        w = generation_window.winfo_screenwidth()
-        h = generation_window.winfo_screenheight()
+        w = self.asc_generation_window.winfo_screenwidth()
+        h = self.asc_generation_window.winfo_screenheight()
+        w = w // 2
         h = h // 2
-        w = w - width_main_window - 12
+        w = w - width_main_window // 2
         h = h - height_main_window // 2
-        generation_window.geometry('+{}+{}'.format(w, h))
-        print('BBBBBBBBBBBBBBBBBBBBBBB')
+        self.asc_generation_window.geometry('+{}+{}'.format(w, h))
 
     def delete_db(self):
         print('DDDDDDDDDDDDDDDDDDDDDDD')
@@ -91,12 +107,12 @@ class Gui:
         self.box.config(yscrollcommand=scroll.set)
 
         # outputs the information about the absolute error in the GUI
-        open_btn = Button(frame_for_buttons_start_window, text="Открыть БД", relief=GROOVE, width=30, command=self.open_db)
-        open_btn.pack(side=LEFT)
-        new_db_btn = Button(frame_for_buttons_start_window, text="Создать новую БД", relief=GROOVE, width=30, command=self.new_db_generation)
-        new_db_btn.pack(side=LEFT)
-        delete_db_btn = Button(frame_for_buttons_start_window, text="Удалить БД", relief=GROOVE, width=30, cursor='X_cursor', command=self.delete_db)
-        delete_db_btn.pack(side=LEFT)
+        self.open_btn = Button(frame_for_buttons_start_window, text="Открыть", relief=GROOVE, width=30, command=self.open_db)
+        self.open_btn.pack(side=LEFT)
+        self.new_db_btn = Button(frame_for_buttons_start_window, text="Создать новую", relief=GROOVE, width=30, command=self.ask_db_generation)
+        self.new_db_btn.pack(side=LEFT)
+        self.delete_db_btn = Button(frame_for_buttons_start_window, text="Удалить", relief=GROOVE, width=30, cursor='X_cursor', command=self.delete_db)
+        self.delete_db_btn.pack(side=LEFT)
 
         # sets the size of the window and places it in the center of the screen
         start_window.update_idletasks()  # Updates information after all frames are created
