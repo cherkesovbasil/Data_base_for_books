@@ -52,6 +52,7 @@ class Gui:
             text.tag_configure('green', foreground='green', background='grey85', justify=CENTER, borderwidth=2, relief='groove')
             text.tag_configure('bg_gray_1', background='grey95', borderwidth=3, relief='sunken')
 
+
             # ДО ЭТОГО МОМЕНТА ОПРЕДЕЛЯЮТСЯ СЛЕДУЮЩИЕ ПЕРЕМЕННЫЕ:
             # - translation_trigger
             # - transliteration_trigger
