@@ -163,19 +163,19 @@ def ask_and_check_directory():
         {глубина_1: [[директория, количество файлов], [директория, количество файлов]], глубина_2: [[...]], ...}
 
     """
-
     filepath = filedialog.askdirectory()
 
     # если путь был выбран
     if filepath:
         file_names = os.listdir(filepath)
+        print(file_names)
 
         # проверить наличие файлов в выбранной директории
+        file_trigger = False
         if file_names:
-            file_trigger = False
-            for name in file_names:
-                if not os.path.isdir(os.path.join(filepath, name)):
-                    print(name)
+            check_for_files = os.walk(filepath)
+            for dirpath, dirnames, filenames in check_for_files:
+                if filenames:
                     file_trigger = True
                     break
 
@@ -190,7 +190,9 @@ def ask_and_check_directory():
 
             else:
                 return "No files read"
+
         else:
             return "Can't read files"
+
     else:
         return "Window were closed"

@@ -1,8 +1,7 @@
-import tkinter
-
 from read_and_write import *
 from tkinter import *
 from tkinter import font
+
 # + вот сюда будут приходить все приколдэсы из функций обработки
 # + отсюда уходит запрос на считку директорий
 # + сюда приходит ответ по количеству файлов и ветвлению
@@ -34,7 +33,6 @@ class Gui:
                      '2', '3', '4', '5']
         for smth in something:
             self.box.insert(END, smth)
-        print('AAAAAAAAAAAAAAAAAAAAAAA')
 
     def db_generation(self):
         self.start_window.destroy()
@@ -46,12 +44,133 @@ class Gui:
 
         def check_directory():
 
-            text.delete(0.0, END)
-            text.tag_configure('highlightline', background='grey70', borderwidth=2, relief='groove')
-            text.tag_configure('red', foreground='red', justify=CENTER, background='grey80', borderwidth=2, relief='groove')
-            text.tag_configure('green', foreground='green', background='grey85', justify=CENTER, borderwidth=2, relief='groove')
-            text.tag_configure('bg_gray_1', background='grey95', borderwidth=3, relief='sunken')
+            # Задаёт стили текста для отображения в ГУИ
+            text.tag_configure('highlightline', background='grey75', borderwidth=2, relief='groove', bgstipple='gray50')
+            text.tag_configure('red', background=self.db_generation_window["bg"], foreground='red', justify=CENTER,
+                               borderwidth=1, relief='ridge')
+            text.tag_configure('green', background='grey85', foreground='green',  justify=CENTER, borderwidth=2,
+                               relief='groove')
+            text.tag_configure('bg_gray_1', background='grey95', borderwidth=3, relief='sunken', bgstipple='gray25',
+                               lmargin1=50, lmargin2=50)
+            text.tag_configure('bg_for_directory', background='grey95', borderwidth=3, relief='sunken', lmargin2=168,
+                               bgstipple='gray25')
 
+            direct = ask_and_check_directory()
+            text['state'] = NORMAL
+
+            if direct == "Window were closed":
+                # КОСТЫЛЬ ДО МОМЕНТА СОЗДАНИЯ ИНТЕРФЕЙСА
+                print('Окно было закрыто')
+                return
+
+            elif direct == "Can't read files":
+                text.delete(0.0, END)
+                text.insert(END, '\n')
+                text.insert(END, 'В ВЫБРАННОЙ ДИРЕКТОРИИ ОТСУТСТВУЮТ ФАЙЛЫ!!!\n', 'red')
+                text.insert(END, '\n')
+                return
+
+            elif direct == "No files read":
+                text.delete(0.0, END)
+                text.insert(END, '\n')
+                text.insert(END, 'СИСТЕМА СМОГЛА РАСПОЗНАТЬ ТОЛЬКО ПАПКИ В ВЫБРАННОЙ ДИРЕКТОРИИ!!!\n', 'red')
+                text.insert(END, '\n')
+                return
+
+            else:
+                # Считает количество директорий и файлов в них
+                number_of_files = 0
+                number_of_directories = 0
+                for files in direct.values():
+                    for file_number in files:
+                        number_of_files += file_number['files_number']
+                        number_of_directories += 1
+
+                # Очистка интерфейса и загрузка в него данных
+                text.delete(0.0, END)
+                text.insert(END, 'СЧИТАННЫЕ ДИРЕКТОРИИ\n', 'red')
+                text.insert(END, '\nколичество директорий:  ' + str(number_of_directories) +
+                            ' (обработано)\nколичество файлов:      ' + str(number_of_files) + '\n\n', 'bg_gray_1')
+                text.insert(END, '\n')
+
+                dir_counter = 0
+                empty_dir_counter = 0
+                dir_without_files = {}
+                for folder in direct.keys():
+                    for elements in range(0, len(direct[folder])):
+                        if direct[folder][elements]['files_number'] != 0:
+                            dir_counter += 1
+                            text.insert(END, 'ДИРЕКТОРИЯ №' + str(dir_counter) + '\n', "green")
+                            text.insert(END, '\n', 'bg_gray_1')
+                            text.insert(END, ' Название папки:    ', "highlightline")
+                            path_name_reversed = str(direct[folder][elements]['dirpath'])[::-1]
+                            if '\\' in path_name_reversed:
+                                folder_name_reversed = path_name_reversed[:path_name_reversed.find('\\')]
+                            else:
+                                folder_name_reversed = path_name_reversed[:path_name_reversed.find('/')]
+                            folder_name = folder_name_reversed[::-1]
+                            text.insert(END, '\t' + folder_name + '\n', 'bg_for_directory')
+                            text.insert(END, '\n', 'bg_gray_1')
+                            text.insert(END, ' Количество файлов: ', "highlightline")
+                            text.insert(END, '\t' + str(direct[folder][elements]['files_number']) + '\n',
+                                        'bg_for_directory')
+                            text.insert(END, '\n', 'bg_gray_1')
+                            text.insert(END, ' Адрес:             ', "highlightline")
+                            text.insert(END, '\t' + str(direct[folder][elements]['dirpath']) + '\n\n',
+                                        'bg_for_directory')
+                            text.insert(END, '\n')
+                        else:
+                            empty_dir_counter += 1
+                            dir_without_files[str(empty_dir_counter)] = direct[folder][elements]['dirpath']
+
+                # Создаёт графическое представление для наличия директорий без файлов, которые будут игнорироваться
+                if dir_without_files:
+                    dir_without_files_for_del = {}
+                    for key, filename in dir_without_files.items():
+                        readen_files = os.walk(filename)
+                        for dirpath, dirnames, filenames in readen_files:
+                            if filenames:
+                                dir_without_files_for_del[key] = filename
+                    for keys in dir_without_files_for_del.keys():
+                        del dir_without_files[keys]
+
+                    if len(dir_without_files) == 1:
+                        text.insert(END, 'ПУСТАЯ ДИРЕКТОРИЯ (' + str(len(dir_without_files)) + ')\n', "red")
+                        text.insert(END, '\n', 'bg_gray_1')
+                        text.insert(END, ' Название папки, которая будет проигнорирована: ', "highlightline")
+                        text.insert(END, '\n', 'bg_gray_1')
+                    elif len(dir_without_files) == 0:
+                        pass
+                    else:
+                        text.insert(END, 'ПУСТЫЕ ДИРЕКТОРИИ (' + str(len(dir_without_files)) + ')\n', "red")
+                        text.insert(END, '\n', 'bg_gray_1')
+                        text.insert(END, ' Названия папок, которые будут проигнорированы: ', "highlightline")
+                        text.insert(END, '\n', 'bg_gray_1')
+
+                    if len(dir_without_files) >= 1:
+                        folder_counter = 0
+                        for path in dir_without_files.values():
+                            folder_counter += 1
+                            path_name_reversed = str(path)[::-1]
+                            if '\\' in path_name_reversed:
+                                folder_name_reversed = path_name_reversed[:path_name_reversed.find('\\')]
+                            else:
+                                folder_name_reversed = path_name_reversed[:path_name_reversed.find('/')]
+                            folder_name = folder_name_reversed[::-1]
+                            text.insert(END, '\n' + str(folder_counter) + ') ' + str(folder_name), 'bg_gray_1')
+                        text.insert(END, '\n\n', 'bg_gray_1')
+
+            text['state'] = DISABLED
+
+            #
+            # ЗАПИСЫВАТЬ ИЗАНЧАЛЬНЫЙ ПУТЬ, КОТОРЫЙ ВЫБРАЛ ПОЛЬЗОВАТЕЛЬ И СОХРАНЯТЬ ЕГО В БД ДЛЯ ВОЗМОЖНОСТИ
+            # АРХИВИРОВАНИЯ И ДР ВЗАИМОДЕЙСТВИЙ
+            #
+
+            #
+            # ТУТ ПОЛЬЗОВАТЕЛЬ ВЫБИРАЕТ ТРЕБУЕМЫЕ ПАПКИ ДЛЯ ЗАГРУЗКИ В БАЗУ. ВЫБОР ПО ФАЙЛАМ, НАВЕРНОЕ, ДЕЛАТЬ НЕ СТОИТ.
+            # ЭТО БУДЕТ ИЗБЫТОЧНО. ТЕМ БОЛЕЕ БАЗА ДАННЫХ БУДЕТ РАБОТАТЬ В ПЕРВУЮ ОЧЕРЕДЬ С ДИРЕКТОРИЯМИ ЦЕЛИКОМ
+            #
 
             # ДО ЭТОГО МОМЕНТА ОПРЕДЕЛЯЮТСЯ СЛЕДУЮЩИЕ ПЕРЕМЕННЫЕ:
             # - translation_trigger
@@ -61,60 +180,13 @@ class Gui:
             #
             # При выборе галочкой перевода через гугл, сразу проверять его работоспособность и выдавать сообщение в ГУИ
             #
-            processed_books = []
-            direct = ask_and_check_directory()
-
-            if direct == "Window were closed":
-                # КОСТЫЛЬ ДО МОМЕНТА СОЗДАНИЯ ИНТЕРФЕЙСА
-                print('Окно было закрыто')
-                return
-
-            if direct == "Can't read files":
-                # КОСТЫЛЬ ДО МОМЕНТА СОЗДАНИЯ ИНТЕРФЕЙСА
-                print('В выбранной директории нет файлов')
-                return
-
-            if direct == "No files read":
-                # КОСТЫЛЬ ДО МОМЕНТА СОЗДАНИЯ ИНТЕРФЕЙСА
-                print('Система смогла распознать только папки в выбранной директории')
-                return
-
-            print('\nсчитанные директории\n' + str(direct))
-            text.insert(END, 'СЧИТАННЫЕ ДИРЕКТОРИИ\n', 'red')
-            text.insert(END, '\n')
-            dir_counter = 0
-            for folder in direct.keys():
-                for elements in range(0, len(direct[folder])):
-                    dir_counter += 1
-                    text.insert(END, 'ДИРЕКТОРИЯ ' + str(dir_counter) + '\n', "green")
-                    text.insert(END, '\n', 'bg_gray_1')
-                    text.insert(END, ' Название папки:    ', "highlightline")
-                    path_name_reversed = str(direct[folder][elements]['dirpath'])[::-1]
-                    if '\\' in path_name_reversed:
-                        folder_name_reversed = path_name_reversed[:path_name_reversed.find('\\')]
-                    else:
-                        folder_name_reversed = path_name_reversed[:path_name_reversed.find('/')]
-                    folder_name = folder_name_reversed[::-1]
-                    text.insert(END, '\t' + folder_name + '\n', 'bg_gray_1')
-                    text.insert(END, '\n', 'bg_gray_1')
-                    text.insert(END, ' Адрес:             ', "highlightline")
-                    text.insert(END, '\n', 'bg_gray_1')
-                    text.insert(END, '\t' + str(direct[folder][elements]['dirpath']) + '\n', 'bg_gray_1')
-                    text.insert(END, '\n', 'bg_gray_1')
-                    text.insert(END, ' Количество файлов: ', "highlightline")
-                    text.insert(END, '\t' + str(direct[folder][elements]['files_number']) + '\n\n', 'bg_gray_1')
-                    text.insert(END, '\n')
-            text['state'] = DISABLED
-
-            #
-            # ТУТ ПОЛЬЗОВАТЕЛЬ ВЫБИРАЕТ ТРЕБУЕМЫЕ ПАПКИ ДЛЯ ЗАГРУЗКИ В БАЗУ. ВЫБОР ПО ФАЙЛАМ, НАВЕРНОЕ, ДЕЛАТЬ НЕ СТОИТ.
-            # ЭТО БУДЕТ ИЗБЫТОЧНО. ТЕМ БОЛЕЕ БАЗА ДАННЫХ БУДЕТ РАБОТАТЬ В ПЕРВУЮ ОЧЕРЕДЬ С ДИРЕКТОРИЯМИ ЦЕЛИКОМ
-            #
 
             #
             # КОСТЫЛЬ. СЧИТАЕМ, ЧТО ПОЛЬЗОВАТЕЛЬ ВЫБРАЛ ВСЕ ДИРЕКТОРИИ
             #
+
             """
+            processed_books = []
             for depth in direct.values():
                 for elements in depth:
                     if elements['files_number'] != 0:
@@ -142,7 +214,8 @@ class Gui:
         frame_for_buttons_db_generation = LabelFrame(self.db_generation_window)
         frame_for_buttons_db_generation.pack(side=TOP)
 
-        text = Text(frame_for_text_db_generation, width=70, height=30, cursor='arrow')
+        text = Text(frame_for_text_db_generation, width=70, height=30, cursor='arrow', background='ghost white',
+                    wrap=WORD)
         text.pack(side=LEFT)
 
         Button(frame_for_buttons_db_generation, text="Выбрать папку", command=check_directory).pack(side=TOP)
@@ -163,8 +236,8 @@ class Gui:
         h = h - height_window // 2
         self.db_generation_window.geometry('+{}+{}'.format(w, h))
 
-    # запускает стартовое окно с запросом на генерацию баз данных
     def ask_db_generation(self):
+        """Запускает стартовое окно с запросом на генерацию баз данных"""
         self.open_btn['state'] = DISABLED
         self.new_db_btn['state'] = DISABLED
         self.delete_db_btn['state'] = DISABLED
@@ -186,9 +259,11 @@ class Gui:
         frame_for_buttons_start_window.pack(side=TOP)
 
         # outputs the information about the absolute error in the GUI
-        open_db_generation_btn = Button(frame_for_buttons_start_window, text="Создать новую", relief=GROOVE, width=30, command=self.db_generation)
+        open_db_generation_btn = Button(frame_for_buttons_start_window, text="Создать новую", relief=GROOVE, width=30,
+                                        command=self.db_generation)
         open_db_generation_btn.pack(side=TOP)
-        from_archive_btn = Button(frame_for_buttons_start_window, text="Разархивировать", relief=GROOVE, width=30, state=DISABLED)
+        from_archive_btn = Button(frame_for_buttons_start_window, text="Разархивировать", relief=GROOVE, width=30,
+                                  state=DISABLED)
         from_archive_btn.pack(side=TOP)
 
         # sets the size of the window and places it in the center of the screen
@@ -234,11 +309,14 @@ class Gui:
         self.box.config(yscrollcommand=scroll.set)
 
         # outputs the information about the absolute error in the GUI
-        self.open_btn = Button(frame_for_buttons_start_window, text="Открыть", relief=GROOVE, width=30, command=self.open_db, state=DISABLED)
+        self.open_btn = Button(frame_for_buttons_start_window, text="Открыть", relief=GROOVE, width=30,
+                               command=self.open_db, state=DISABLED)
         self.open_btn.pack(side=LEFT)
-        self.new_db_btn = Button(frame_for_buttons_start_window, text="Создать новую", relief=GROOVE, width=30, command=self.ask_db_generation)
+        self.new_db_btn = Button(frame_for_buttons_start_window, text="Создать новую", relief=GROOVE, width=30,
+                                 command=self.ask_db_generation)
         self.new_db_btn.pack(side=LEFT)
-        self.delete_db_btn = Button(frame_for_buttons_start_window, text="Удалить", relief=GROOVE, width=30, cursor='X_cursor', command=self.delete_db, state=DISABLED)
+        self.delete_db_btn = Button(frame_for_buttons_start_window, text="Удалить", relief=GROOVE, width=30,
+                                    cursor='X_cursor', command=self.delete_db, state=DISABLED)
         self.delete_db_btn.pack(side=LEFT)
 
         # sets the size of the window and places it in the center of the screen
