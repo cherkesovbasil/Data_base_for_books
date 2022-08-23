@@ -1,6 +1,9 @@
 from read_and_write import *
 from tkinter import *
 from tkinter import font
+import re
+from googletrans import Translator
+
 
 # + вот сюда будут приходить все приколдэсы из функций обработки
 # + отсюда уходит запрос на считку директорий
@@ -9,11 +12,15 @@ from tkinter import font
 # + отправляет обратно данные для переработки через циклическую функцию в препроцессинг
 # + если директория одна, то циклическая функция отрабатывает только 1 цикл
 
-
 class Gui:
     """Графический интерфейс"""
 
     def __init__(self):
+        self.text = None
+        self.googletrans_status = 'first_press'
+        self.label = None
+        self.entry = None
+        self.pattern = None
         self.db_generation_window = None
         self.start_window = None
         self.delete_db_btn = None
@@ -69,6 +76,7 @@ class Gui:
                 return
 
             elif direct == "Can't read files":
+                choose_directory_btn['background'] = 'gray95'
                 load_text.delete(0.0, END)
                 load_text.insert(END, '\n')
                 load_text.insert(END, 'В ВЫБРАННОЙ ДИРЕКТОРИИ ОТСУТСТВУЮТ ФАЙЛЫ!!!\n', 'red')
@@ -80,6 +88,7 @@ class Gui:
                 load_text.insert(END, '\n')
                 load_text.insert(END, 'СИСТЕМА СМОГЛА РАСПОЗНАТЬ ТОЛЬКО ПАПКИ В ВЫБРАННОЙ ДИРЕКТОРИИ!!!\n', 'red')
                 load_text.insert(END, '\n')
+                choose_directory_btn['background'] = 'gray95'
                 return
 
             else:
@@ -166,7 +175,7 @@ class Gui:
                             load_text.insert(END, '\n' + str(folder_counter) + ') ' + str(folder_name),
                                              'bg_gray_1')
                         load_text.insert(END, '\n\n', 'bg_gray_1')
-
+                choose_directory_btn['background'] = 'lightgreen'
             load_text['state'] = DISABLED
 
             #
@@ -223,17 +232,29 @@ class Gui:
         frame_for_button_open_folder = LabelFrame(self.db_generation_window)
         frame_for_button_open_folder.pack(side=TOP, fill=X, pady=15)
 
-        frame_for_db_name = LabelFrame(self.db_generation_window)
-        frame_for_db_name.pack(side=TOP, fill=X)
+        frame_for_translation = LabelFrame(self.db_generation_window)
+        frame_for_translation.pack(side=TOP, fill=X, pady=8)
 
-        frame_for_checkbox_translation = LabelFrame(self.db_generation_window)
+        frame_for_checkbox_translation = LabelFrame(frame_for_translation)
         frame_for_checkbox_translation.pack(side=TOP, fill=X)
 
-        frame_for_checkbox_translation_text = LabelFrame(self.db_generation_window)
+        frame_for_checkbox_translation_text = LabelFrame(frame_for_translation)
         frame_for_checkbox_translation_text.pack(side=TOP, fill=X)
 
-        frame_for_checkbox_transliteration = LabelFrame(self.db_generation_window)
-        frame_for_checkbox_transliteration.pack(side=TOP, fill=X, pady=15)
+        frame_for_transliteration = LabelFrame(self.db_generation_window)
+        frame_for_transliteration.pack(side=TOP, fill=X, pady=8)
+
+        frame_for_checkbox_transliteration = LabelFrame(frame_for_transliteration)
+        frame_for_checkbox_transliteration.pack(side=TOP, fill=X)
+
+        frame_for_checkbox_transliteration_text = LabelFrame(frame_for_transliteration)
+        frame_for_checkbox_transliteration_text.pack(side=TOP, fill=X)
+
+        frame_for_db_name = LabelFrame(self.db_generation_window)
+        frame_for_db_name.pack(side=TOP, fill=X, pady=8)
+
+        frame_for_db_description = LabelFrame(self.db_generation_window)
+        frame_for_db_description.pack(side=TOP, fill=X, pady=8)
 
         frame_for_start_btn = LabelFrame(self.db_generation_window)
         frame_for_start_btn.pack(side=TOP, fill=X)
@@ -241,38 +262,148 @@ class Gui:
         load_text = Text(frame_for_text_db_generation, width=70, height=30, cursor='arrow', background='ghost white',
                          wrap=WORD)
         load_text.pack(side=LEFT)
+        load_text['state'] = DISABLED
 
         choose_directory_btn = Button(frame_for_button_open_folder, text="Выбрать папку", relief=GROOVE, width=30,
                                       command=check_directory)
         choose_directory_btn.pack(side=TOP)
 
-        ##
         ## написать функции для проверки английского языка!!! Сделать подсветку зеленым после проверки
-        ## написать описание к пунктам с галочками
         ## сделать так, чтобы переменные були передавались в циклическую функцию
-        ## выше прописать пукнт с названием базы данных (проверка по уже существующим названиям)
         ## прописать кнопку генерации данных в функции предобработки
 
+        ## галочки транслита и перевода
+        ##
         translation_variable = BooleanVar()
         transliteration_variable = BooleanVar()
 
         def check_translation():
-            print(translation_variable.get())
+
+            def status_check():
+                self.googletrans_status = False
+                translator = Translator()
+                trans = translator.translate('check', dest='ru')
+                translated_tag = trans.text
+                print(translated_tag)
+
+                if translated_tag:
+                    self.googletrans_status = True
+                    label_for_translation['background'] = 'lightgreen'
+                    label_for_translation['text'] = 'подключено: 🗸'
+                    frame_for_checkbox_translation_text['background'] = 'lightgreen'
+                    frame_for_checkbox_translation['background'] = 'lightgreen'
+                    checkbutton_translation['background'] = 'lightgreen'
+                else:
+                    label_for_translation['background'] = 'lightcoral'
+                    label_for_translation['text'] = 'Проверьте Internet соединение!!!'
+                    frame_for_checkbox_translation_text['background'] = 'lightcoral'
+                    frame_for_checkbox_translation['background'] = 'gray95'
+                    checkbutton_translation['background'] = 'gray95'
+                    translation_variable.set(False)
+
+                return translated_tag
+
+            if translation_variable.get():
+                label_for_translation['text'] = 'проверка работы сервисов: ...'
+                label_for_translation['background'] = 'gray95'
+                label_for_translation['text'] = 'проверка работы сервисов: ...'
+                frame_for_checkbox_translation_text['background'] = 'gray95'
+                frame_for_checkbox_translation_text.after(400, status_check)
+                if self.googletrans_status == 'first_press':
+                    pass
+                if not self.googletrans_status:
+                    print(self.googletrans_status)
+                    label_for_translation['background'] = 'lightcoral'
+                    label_for_translation['text'] = 'Проверьте Internet соединение!!!'
+                    frame_for_checkbox_translation_text['background'] = 'lightcoral'
+                    frame_for_checkbox_translation['background'] = 'gray95'
+                    checkbutton_translation['background'] = 'gray95'
+                    translation_variable.set(False)
+
+            else:
+                label_for_translation['background'] = 'gray95'
+                label_for_translation['text'] = 'статус подключения модуля: ❎'
+                checkbutton_translation['background'] = 'gray95'
+                frame_for_checkbox_translation_text['background'] = 'gray95'
+                frame_for_checkbox_translation['background'] = 'gray95'
 
         def check_transliteration():
-            print(transliteration_variable.get())
+            def status_change():
+                label_for_transliteration['background'] = 'lightgreen'
+                label_for_transliteration['text'] = 'подключено: 🗸'
+                frame_for_checkbox_transliteration_text['background'] = 'lightgreen'
 
-        Checkbutton(frame_for_checkbox_translation, text='Перевод (сервисы google)', command=check_translation,
-                    variable=translation_variable, onvalue=True, offvalue=False).pack(side=LEFT, pady=10)
+            if transliteration_variable.get():
+                label_for_transliteration['background'] = 'gray95'
+                label_for_transliteration['text'] = 'проверка работы сервисов: ...'
+                label_for_transliteration.after(600, status_change)
+                frame_for_checkbox_transliteration_text['background'] = 'gray95'
 
-        Label(frame_for_checkbox_translation_text, text='статус подключения модуля: ***').pack(
-            side=BOTTOM, pady=2)
+                checkbutton_transliteration['background'] = 'lightgreen'
+                frame_for_checkbox_transliteration['background'] = 'lightgreen'
+            else:
+                label_for_transliteration['background'] = 'gray95'
+                label_for_transliteration['text'] = 'статус подключения модуля: ❎'
+                frame_for_checkbox_transliteration_text['background'] = 'gray95'
+                checkbutton_transliteration['background'] = 'gray95'
+                frame_for_checkbox_transliteration['background'] = 'gray95'
 
-        Checkbutton(frame_for_checkbox_transliteration, text='Транслитерация текста', command=check_transliteration,
-                    variable=transliteration_variable, onvalue=True, offvalue=False).pack(side=LEFT, pady=10)
+        checkbutton_translation = Checkbutton(frame_for_checkbox_translation, text='Перевод (сервисы google)',
+                                              command=check_translation,
+                                              variable=translation_variable, onvalue=True, offvalue=False)
+        checkbutton_translation.pack(side=LEFT, pady=10)
 
-        translation_variable.set(False)
+        label_for_translation = Label(frame_for_checkbox_translation_text, text='статус подключения модуля: ❎')
+        label_for_translation.pack(side=TOP, pady=2)
+
+        checkbutton_transliteration = Checkbutton(frame_for_checkbox_transliteration, text='Транслитерация текста',
+                                                  command=check_transliteration,
+                                                  variable=transliteration_variable, onvalue=True, offvalue=False)
+        checkbutton_transliteration.pack(side=LEFT, pady=10)
+
+        label_for_transliteration = Label(frame_for_checkbox_transliteration_text,
+                                          text='статус подключения модуля: ❎')
+        label_for_transliteration.pack(side=TOP, pady=2)
+
+        translation_variable.set(False)                    ####   переменные були, по которым нужно смотреть был ли выбор перевода/транслитерации
         transliteration_variable.set(False)
+        ##
+        ##
+
+        ## меню ввода названия директории (((добавить переменную названия базы данных)))!
+        ##
+        def validate_dbname(dbname):
+            if not dbname:
+                self.entry['background'] = 'lightcoral'
+            else:
+                self.entry['background'] = 'lightgreen'
+            return self.pattern.match(dbname) is not None
+
+        def change_color_error():
+            def change_back():
+                if self.entry.get():
+                    self.entry['background'] = 'lightgreen'
+            self.entry['background'] = 'lightcoral'
+            self.entry.after(400, change_back)
+
+        self.pattern = re.compile("^\w{0,30}$")
+        self.label = Label(frame_for_db_name, text="Введите название базы данных:")
+        vcmd = (frame_for_db_name.register(validate_dbname), "%P")
+        self.entry = Entry(frame_for_db_name, validate="key",
+                           validatecommand=vcmd, invalidcommand=change_color_error, background='white')
+        self.label.pack()
+        self.entry.pack(side=TOP, padx=10, pady=10, fill=X)
+        ##
+        ##
+
+        ##   текст описания базы данных!!
+        ##
+        label_for_description = Label(frame_for_db_description, text="Описание БД (опционально):")
+        label_for_description.pack(side=TOP)
+        text_of_description = Text(frame_for_db_description, background='white', width=25, height=2)
+        text_of_description.pack(side=TOP, padx=10, pady=10)
+        ##
+        ##
 
         # sets the size of the window and places it in the center of the screen
         self.db_generation_window.update_idletasks()  # Updates information after all frames are created
