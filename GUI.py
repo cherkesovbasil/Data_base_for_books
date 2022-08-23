@@ -45,18 +45,23 @@ class Gui:
         def check_directory():
 
             # Задаёт стили текста для отображения в ГУИ
-            text.tag_configure('highlightline', background='grey75', borderwidth=2, relief='groove', bgstipple='gray50')
-            text.tag_configure('red', background=self.db_generation_window["bg"], foreground='red', justify=CENTER,
-                               borderwidth=1, relief='ridge')
-            text.tag_configure('green', background='grey85', foreground='green',  justify=CENTER, borderwidth=2,
-                               relief='groove')
-            text.tag_configure('bg_gray_1', background='grey95', borderwidth=3, relief='sunken', bgstipple='gray25',
-                               lmargin1=50, lmargin2=50)
-            text.tag_configure('bg_for_directory', background='grey95', borderwidth=3, relief='sunken', lmargin2=168,
-                               bgstipple='gray25')
+            load_text.tag_configure('highlightline', background='grey75', borderwidth=2, relief='groove',
+                                    bgstipple='gray50')
+            load_text.tag_configure('red', background=self.db_generation_window["bg"], foreground='red',
+                                    justify=CENTER,
+                                    borderwidth=1, relief='ridge')
+            load_text.tag_configure('green', background='grey85', foreground='green', justify=CENTER,
+                                    borderwidth=2,
+                                    relief='groove')
+            load_text.tag_configure('bg_gray_1', background='grey95', borderwidth=3, relief='sunken',
+                                    bgstipple='gray25',
+                                    lmargin1=50, lmargin2=50)
+            load_text.tag_configure('bg_for_directory', background='grey95', borderwidth=3, relief='sunken',
+                                    lmargin2=168,
+                                    bgstipple='gray25')
 
             direct = ask_and_check_directory()
-            text['state'] = NORMAL
+            load_text['state'] = NORMAL
 
             if direct == "Window were closed":
                 # КОСТЫЛЬ ДО МОМЕНТА СОЗДАНИЯ ИНТЕРФЕЙСА
@@ -64,17 +69,17 @@ class Gui:
                 return
 
             elif direct == "Can't read files":
-                text.delete(0.0, END)
-                text.insert(END, '\n')
-                text.insert(END, 'В ВЫБРАННОЙ ДИРЕКТОРИИ ОТСУТСТВУЮТ ФАЙЛЫ!!!\n', 'red')
-                text.insert(END, '\n')
+                load_text.delete(0.0, END)
+                load_text.insert(END, '\n')
+                load_text.insert(END, 'В ВЫБРАННОЙ ДИРЕКТОРИИ ОТСУТСТВУЮТ ФАЙЛЫ!!!\n', 'red')
+                load_text.insert(END, '\n')
                 return
 
             elif direct == "No files read":
-                text.delete(0.0, END)
-                text.insert(END, '\n')
-                text.insert(END, 'СИСТЕМА СМОГЛА РАСПОЗНАТЬ ТОЛЬКО ПАПКИ В ВЫБРАННОЙ ДИРЕКТОРИИ!!!\n', 'red')
-                text.insert(END, '\n')
+                load_text.delete(0.0, END)
+                load_text.insert(END, '\n')
+                load_text.insert(END, 'СИСТЕМА СМОГЛА РАСПОЗНАТЬ ТОЛЬКО ПАПКИ В ВЫБРАННОЙ ДИРЕКТОРИИ!!!\n', 'red')
+                load_text.insert(END, '\n')
                 return
 
             else:
@@ -87,11 +92,12 @@ class Gui:
                         number_of_directories += 1
 
                 # Очистка интерфейса и загрузка в него данных
-                text.delete(0.0, END)
-                text.insert(END, 'СЧИТАННЫЕ ДИРЕКТОРИИ\n', 'red')
-                text.insert(END, '\nколичество директорий:  ' + str(number_of_directories) +
-                            ' (обработано)\nколичество файлов:      ' + str(number_of_files) + '\n\n', 'bg_gray_1')
-                text.insert(END, '\n')
+                load_text.delete(0.0, END)
+                load_text.insert(END, 'СЧИТАННЫЕ ДИРЕКТОРИИ\n', 'red')
+                load_text.insert(END, '\nколичество директорий:  ' + str(number_of_directories) +
+                                 ' (обработано)\nколичество файлов:      ' + str(number_of_files) + '\n\n',
+                                 'bg_gray_1')
+                load_text.insert(END, '\n')
 
                 dir_counter = 0
                 empty_dir_counter = 0
@@ -100,25 +106,25 @@ class Gui:
                     for elements in range(0, len(direct[folder])):
                         if direct[folder][elements]['files_number'] != 0:
                             dir_counter += 1
-                            text.insert(END, 'ДИРЕКТОРИЯ №' + str(dir_counter) + '\n', "green")
-                            text.insert(END, '\n', 'bg_gray_1')
-                            text.insert(END, ' Название папки:    ', "highlightline")
+                            load_text.insert(END, 'ДИРЕКТОРИЯ №' + str(dir_counter) + '\n', "green")
+                            load_text.insert(END, '\n', 'bg_gray_1')
+                            load_text.insert(END, ' Название папки:    ', "highlightline")
                             path_name_reversed = str(direct[folder][elements]['dirpath'])[::-1]
                             if '\\' in path_name_reversed:
                                 folder_name_reversed = path_name_reversed[:path_name_reversed.find('\\')]
                             else:
                                 folder_name_reversed = path_name_reversed[:path_name_reversed.find('/')]
                             folder_name = folder_name_reversed[::-1]
-                            text.insert(END, '\t' + folder_name + '\n', 'bg_for_directory')
-                            text.insert(END, '\n', 'bg_gray_1')
-                            text.insert(END, ' Количество файлов: ', "highlightline")
-                            text.insert(END, '\t' + str(direct[folder][elements]['files_number']) + '\n',
-                                        'bg_for_directory')
-                            text.insert(END, '\n', 'bg_gray_1')
-                            text.insert(END, ' Адрес:             ', "highlightline")
-                            text.insert(END, '\t' + str(direct[folder][elements]['dirpath']) + '\n\n',
-                                        'bg_for_directory')
-                            text.insert(END, '\n')
+                            load_text.insert(END, '\t' + folder_name + '\n', 'bg_for_directory')
+                            load_text.insert(END, '\n', 'bg_gray_1')
+                            load_text.insert(END, ' Количество файлов: ', "highlightline")
+                            load_text.insert(END, '\t' + str(direct[folder][elements]['files_number']) + '\n',
+                                             'bg_for_directory')
+                            load_text.insert(END, '\n', 'bg_gray_1')
+                            load_text.insert(END, ' Адрес:             ', "highlightline")
+                            load_text.insert(END, '\t' + str(direct[folder][elements]['dirpath']) + '\n\n',
+                                             'bg_for_directory')
+                            load_text.insert(END, '\n')
                         else:
                             empty_dir_counter += 1
                             dir_without_files[str(empty_dir_counter)] = direct[folder][elements]['dirpath']
@@ -135,17 +141,17 @@ class Gui:
                         del dir_without_files[keys]
 
                     if len(dir_without_files) == 1:
-                        text.insert(END, 'ПУСТАЯ ДИРЕКТОРИЯ (' + str(len(dir_without_files)) + ')\n', "red")
-                        text.insert(END, '\n', 'bg_gray_1')
-                        text.insert(END, ' Название папки, которая будет проигнорирована: ', "highlightline")
-                        text.insert(END, '\n', 'bg_gray_1')
+                        load_text.insert(END, 'ПУСТАЯ ДИРЕКТОРИЯ (' + str(len(dir_without_files)) + ')\n', "red")
+                        load_text.insert(END, '\n', 'bg_gray_1')
+                        load_text.insert(END, ' Название папки, которая будет проигнорирована: ', "highlightline")
+                        load_text.insert(END, '\n', 'bg_gray_1')
                     elif len(dir_without_files) == 0:
                         pass
                     else:
-                        text.insert(END, 'ПУСТЫЕ ДИРЕКТОРИИ (' + str(len(dir_without_files)) + ')\n', "red")
-                        text.insert(END, '\n', 'bg_gray_1')
-                        text.insert(END, ' Названия папок, которые будут проигнорированы: ', "highlightline")
-                        text.insert(END, '\n', 'bg_gray_1')
+                        load_text.insert(END, 'ПУСТЫЕ ДИРЕКТОРИИ (' + str(len(dir_without_files)) + ')\n', "red")
+                        load_text.insert(END, '\n', 'bg_gray_1')
+                        load_text.insert(END, ' Названия папок, которые будут проигнорированы: ', "highlightline")
+                        load_text.insert(END, '\n', 'bg_gray_1')
 
                     if len(dir_without_files) >= 1:
                         folder_counter = 0
@@ -157,10 +163,11 @@ class Gui:
                             else:
                                 folder_name_reversed = path_name_reversed[:path_name_reversed.find('/')]
                             folder_name = folder_name_reversed[::-1]
-                            text.insert(END, '\n' + str(folder_counter) + ') ' + str(folder_name), 'bg_gray_1')
-                        text.insert(END, '\n\n', 'bg_gray_1')
+                            load_text.insert(END, '\n' + str(folder_counter) + ') ' + str(folder_name),
+                                             'bg_gray_1')
+                        load_text.insert(END, '\n\n', 'bg_gray_1')
 
-            text['state'] = DISABLED
+            load_text['state'] = DISABLED
 
             #
             # ЗАПИСЫВАТЬ ИЗАНЧАЛЬНЫЙ ПУТЬ, КОТОРЫЙ ВЫБРАЛ ПОЛЬЗОВАТЕЛЬ И СОХРАНЯТЬ ЕГО В БД ДЛЯ ВОЗМОЖНОСТИ
@@ -207,18 +214,65 @@ class Gui:
 
         # disables the ability to zoom the page
         self.db_generation_window.resizable(False, False)
+        self.db_generation_window["bg"] = 'gray90'
 
         # frame for the main interface
         frame_for_text_db_generation = LabelFrame(self.db_generation_window)
         frame_for_text_db_generation.pack(side=LEFT)
-        frame_for_buttons_db_generation = LabelFrame(self.db_generation_window)
-        frame_for_buttons_db_generation.pack(side=TOP)
 
-        text = Text(frame_for_text_db_generation, width=70, height=30, cursor='arrow', background='ghost white',
-                    wrap=WORD)
-        text.pack(side=LEFT)
+        frame_for_button_open_folder = LabelFrame(self.db_generation_window)
+        frame_for_button_open_folder.pack(side=TOP, fill=X, pady=15)
 
-        Button(frame_for_buttons_db_generation, text="Выбрать папку", command=check_directory).pack(side=TOP)
+        frame_for_db_name = LabelFrame(self.db_generation_window)
+        frame_for_db_name.pack(side=TOP, fill=X)
+
+        frame_for_checkbox_translation = LabelFrame(self.db_generation_window)
+        frame_for_checkbox_translation.pack(side=TOP, fill=X)
+
+        frame_for_checkbox_translation_text = LabelFrame(self.db_generation_window)
+        frame_for_checkbox_translation_text.pack(side=TOP, fill=X)
+
+        frame_for_checkbox_transliteration = LabelFrame(self.db_generation_window)
+        frame_for_checkbox_transliteration.pack(side=TOP, fill=X, pady=15)
+
+        frame_for_start_btn = LabelFrame(self.db_generation_window)
+        frame_for_start_btn.pack(side=TOP, fill=X)
+
+        load_text = Text(frame_for_text_db_generation, width=70, height=30, cursor='arrow', background='ghost white',
+                         wrap=WORD)
+        load_text.pack(side=LEFT)
+
+        choose_directory_btn = Button(frame_for_button_open_folder, text="Выбрать папку", relief=GROOVE, width=30,
+                                      command=check_directory)
+        choose_directory_btn.pack(side=TOP)
+
+        ##
+        ## написать функции для проверки английского языка!!! Сделать подсветку зеленым после проверки
+        ## написать описание к пунктам с галочками
+        ## сделать так, чтобы переменные були передавались в циклическую функцию
+        ## выше прописать пукнт с названием базы данных (проверка по уже существующим названиям)
+        ## прописать кнопку генерации данных в функции предобработки
+
+        translation_variable = BooleanVar()
+        transliteration_variable = BooleanVar()
+
+        def check_translation():
+            print(translation_variable.get())
+
+        def check_transliteration():
+            print(transliteration_variable.get())
+
+        Checkbutton(frame_for_checkbox_translation, text='Перевод (сервисы google)', command=check_translation,
+                    variable=translation_variable, onvalue=True, offvalue=False).pack(side=LEFT, pady=10)
+
+        Label(frame_for_checkbox_translation_text, text='статус подключения модуля: ***').pack(
+            side=BOTTOM, pady=2)
+
+        Checkbutton(frame_for_checkbox_transliteration, text='Транслитерация текста', command=check_transliteration,
+                    variable=transliteration_variable, onvalue=True, offvalue=False).pack(side=LEFT, pady=10)
+
+        translation_variable.set(False)
+        transliteration_variable.set(False)
 
         # sets the size of the window and places it in the center of the screen
         self.db_generation_window.update_idletasks()  # Updates information after all frames are created
