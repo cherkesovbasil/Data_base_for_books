@@ -288,8 +288,8 @@ class Gui:
 
                 if translated_tag:
                     self.googletrans_status = True
-                    label_for_translation['background'] = 'lightgreen'
                     label_for_translation['text'] = 'подключено: 🗸'
+                    label_for_translation['background'] = 'lightgreen'
                     frame_for_checkbox_translation_text['background'] = 'lightgreen'
                     frame_for_checkbox_translation['background'] = 'lightgreen'
                     checkbutton_translation['background'] = 'lightgreen'
@@ -304,11 +304,10 @@ class Gui:
                 return translated_tag
 
             if translation_variable.get():
-                label_for_translation['text'] = 'проверка работы сервисов: ...'
                 label_for_translation['background'] = 'gray95'
                 label_for_translation['text'] = 'проверка работы сервисов: ...'
-                frame_for_checkbox_translation_text['background'] = 'gray95'
                 frame_for_checkbox_translation_text.after(400, status_check)
+                frame_for_checkbox_translation_text['background'] = 'gray95'
                 if self.googletrans_status == 'first_press':
                     pass
                 if not self.googletrans_status:
